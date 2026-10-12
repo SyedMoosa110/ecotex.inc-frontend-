@@ -408,10 +408,46 @@ export const CustomerChatbot: React.FC = () => {
                   </div>
 
                   {isAdmin && (
-                    <span className="text-[10px] font-sans font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                      <span>Verified EcoTex Specialist</span>
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      <span className="text-[10px] font-sans font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        <span>Verified EcoTex Specialist</span>
+                      </span>
+
+                      {/* Customer WhatsApp Notification Pill */}
+                      {custPhone && (
+                        <a
+                          href={(() => {
+                            let digits = custPhone.replace(/[^0-9]/g, '');
+                            if (digits.startsWith('03') && digits.length === 11) {
+                              digits = '92' + digits.slice(1);
+                            } else if (digits.startsWith('00')) {
+                              digits = digits.slice(2);
+                            }
+                            return `https://wa.me/${digits}?text=${encodeURIComponent(m.text)}`;
+                          })()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-sans font-semibold text-emerald-800 bg-emerald-100/80 hover:bg-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors"
+                          title="Notification linked to your WhatsApp"
+                        >
+                          <WhatsAppIcon className="w-2.5 h-2.5 fill-[#25D366]" />
+                          <span>Notified on WhatsApp ({custPhone})</span>
+                          <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
+                        </a>
+                      )}
+
+                      {/* Customer Email Notification Pill */}
+                      {custEmail && !custEmail.includes('visitor@livechat') && !custEmail.includes('@whatsapp') && (
+                        <span 
+                          className="text-[10px] font-sans font-medium text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1"
+                          title="Notification copy sent to your email"
+                        >
+                          <Mail className="w-2.5 h-2.5 text-blue-600" />
+                          <span>Copy sent to {custEmail}</span>
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               );

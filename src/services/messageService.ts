@@ -225,12 +225,33 @@ export async function sendAdminReply(threadId: string, text: string): Promise<Cu
   const now = new Date();
   const timeFormatted = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+  const rawPhone = thread.phone || '';
+  let cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+  if (cleanPhone.startsWith('03') && cleanPhone.length === 11) {
+    cleanPhone = '92' + cleanPhone.slice(1);
+  } else if (cleanPhone.startsWith('00')) {
+    cleanPhone = cleanPhone.slice(2);
+  }
+  const hasWhatsApp = Boolean(cleanPhone && cleanPhone.length >= 7);
+  const hasEmail = Boolean(thread.email && !thread.email.includes('visitor@livechat') && !thread.email.includes('@whatsapp'));
+
   const adminMsg: ChatMessage = {
     id: `admin-${Date.now()}`,
     sender: 'admin',
     senderName: 'EcoTex Support Team',
     text: text.trim(),
-    timestamp: timeFormatted
+    timestamp: timeFormatted,
+    notifications: {
+      whatsapp: {
+        target: rawPhone || null,
+        dispatched: hasWhatsApp,
+        url: hasWhatsApp ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text.trim())}` : null
+      },
+      email: {
+        target: thread.email || null,
+        dispatched: hasEmail
+      }
+    }
   };
 
   const updatedThread: CustomerThread = {

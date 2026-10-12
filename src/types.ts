@@ -314,6 +314,10 @@ export interface ChatMessage {
   text: string;
   timestamp: string;
   channel?: 'web' | 'email' | 'whatsapp' | 'phone';
+  notifications?: {
+    whatsapp?: { target?: string | null; dispatched?: boolean; url?: string | null };
+    email?: { target?: string | null; dispatched?: boolean };
+  };
 }
 
 export interface CustomerThread {
