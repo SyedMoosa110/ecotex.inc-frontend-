@@ -22,6 +22,7 @@ import { ActiveSection, Product } from './types';
 export default function App() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('home');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [quoteProductId, setQuoteProductId] = useState<string>('prod-1');
   const [cartInitialStep, setCartInitialStep] = useState<'cart' | 'checkout'>('cart');
@@ -98,16 +99,22 @@ export default function App() {
     setCartInitialStep('checkout');
     setIsCartOpen(true);
     setQuickViewProduct(null);
+    setSelectedProduct(null);
   };
 
   const handleOpenProductDetail = (product: Product) => {
-    setQuickViewProduct(product);
+    setSelectedProduct(product);
+    setQuickViewProduct(null); // Ensure popup modal is never triggered
     setActiveSection('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavigate = (section: ActiveSection) => {
     setActiveSection(section);
+    setQuickViewProduct(null); // Clear any popup modal
+    if (section !== 'product-detail') {
+      setSelectedProduct(null); // Clear single product page data so modal never pops up
+    }
     if (section === 'admin') {
       window.history.pushState({}, '', '/admin');
     } else if (window.location.pathname.startsWith('/admin')) {
@@ -225,16 +232,14 @@ export default function App() {
           )}
 
           {/* PRODUCT DETAIL VIEW */}
-          {activeSection === 'product-detail' && quickViewProduct && (
+          {activeSection === 'product-detail' && selectedProduct && (
             <ProductDetailPage
-              product={quickViewProduct}
+              product={selectedProduct}
               onBack={() => {
-                setActiveSection('shop');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                handleNavigate('shop');
               }}
               onNavigateHome={() => {
-                setActiveSection('home');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                handleNavigate('home');
               }}
               onAddToCart={(p, color, qty) => addToCart(p, color, qty)}
               onOpenQuote={handleOpenQuoteForProduct}
@@ -270,7 +275,7 @@ export default function App() {
       />
 
       {/* Quick View Modal */}
-      {activeSection !== 'product-detail' && (
+      {activeSection !== 'product-detail' && quickViewProduct && (
         <ProductDetailModal
           product={quickViewProduct}
           onClose={() => setQuickViewProduct(null)}

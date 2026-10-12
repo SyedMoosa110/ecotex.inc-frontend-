@@ -291,38 +291,93 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 )}
               </div>
 
-              {/* Quantity Stepper & ADD TO CART Row */}
-              <div className="mt-5 flex flex-col sm:flex-row items-center gap-3">
-                {/* Stepper */}
-                <div className="w-full sm:w-36 h-12 rounded-xl border border-slate-300 bg-white flex items-center justify-between px-3">
-                  <button
-                    type="button"
-                    onClick={handleDecrement}
-                    className="p-1 text-slate-500 hover:text-black transition-colors cursor-pointer"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="font-mono font-bold text-sm text-[#111827]">
-                    {quantity}
+              {/* Explicit Quantity Label & Selector */}
+              <div className="mt-5">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <span>Order Quantity</span>
+                    {orderType === 'wholesale' && (
+                      <span className="text-[10px] font-bold text-[#166534] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        MOQ: {product.moq || 500} pcs
+                      </span>
+                    )}
+                  </label>
+                  <span className="font-mono text-xs font-bold text-[#166534]">
+                    Total: {quantity.toLocaleString()} {quantity === 1 ? 'unit' : 'units'}
                   </span>
+                </div>
+
+                {/* Quantity Stepper & ADD TO CART Row */}
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  {/* Stepper with Editable Input */}
+                  <div className="w-full sm:w-44 h-12 rounded-xl border border-slate-300 bg-white flex items-center justify-between px-2 shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const step = orderType === 'wholesale' ? 250 : 1;
+                        const min = orderType === 'wholesale' ? (product.moq || 500) : 1;
+                        setQuantity(prev => Math.max(min, prev - step));
+                      }}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-black hover:bg-slate-100 transition-colors cursor-pointer"
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="number"
+                      min={orderType === 'wholesale' ? (product.moq || 500) : 1}
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        setQuantity(Math.max(1, val));
+                      }}
+                      className="w-20 text-center font-mono font-bold text-sm text-[#111827] focus:outline-none bg-transparent"
+                      aria-label="Quantity amount"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const step = orderType === 'wholesale' ? 250 : 1;
+                        setQuantity(prev => prev + step);
+                      }}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-black hover:bg-slate-100 transition-colors cursor-pointer"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* ADD TO CART Button (Solid Black with ShoppingBag icon) */}
                   <button
                     type="button"
-                    onClick={handleIncrement}
-                    className="p-1 text-slate-500 hover:text-black transition-colors cursor-pointer"
+                    onClick={handleAddToCartClick}
+                    className="w-full sm:flex-1 h-12 bg-[#0f172a] hover:bg-[#166534] text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 shadow-md active:scale-98 cursor-pointer"
                   >
-                    <Plus className="w-4 h-4" />
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>Add To Cart ({quantity.toLocaleString()} pcs)</span>
                   </button>
                 </div>
 
-                {/* ADD TO CART Button (Solid Black with ShoppingBag icon) */}
-                <button
-                  type="button"
-                  onClick={handleAddToCartClick}
-                  className="w-full sm:flex-1 h-12 bg-[#0f172a] hover:bg-[#166534] text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 shadow-md active:scale-98 cursor-pointer"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>Add To Cart</span>
-                </button>
+                {/* Wholesale Quick Select Presets */}
+                {orderType === 'wholesale' && (
+                  <div className="flex items-center gap-2 mt-2.5">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick:</span>
+                    {[500, 1000, 2500, 5000, 10000].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setQuantity(preset)}
+                        className={`px-2.5 py-1 text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
+                          quantity === preset
+                            ? 'bg-[#166534] text-white border-[#166534] font-bold shadow-xs'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900'
+                        }`}
+                      >
+                        {preset.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* EXPRESS CHECKOUT / REQUEST QUOTE Button */}

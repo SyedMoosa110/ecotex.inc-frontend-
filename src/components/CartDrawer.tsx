@@ -434,10 +434,15 @@ Notification automatically generated via EcoTex Storefront.`;
                                 <p className="text-xs text-[#777] font-light mt-0.5">
                                   {item.product.gsm} GSM · {item.product.dimensions}
                                 </p>
+                                {/* Mobile Quantity Badge so it is NEVER hidden */}
+                                <div className="sm:hidden mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#FAF8F5] border border-[#cfc8bd]/60 text-[11px] font-mono font-bold text-[#166534]">
+                                  <span>Quantity:</span>
+                                  <span>{(item.quantity || 1).toLocaleString()}</span>
+                                </div>
                               </div>
 
-                              {/* 3. Quantity: Minimalist Stepper */}
-                              <div className="col-span-2 flex items-center justify-center gap-2 sm:gap-2.5 text-xs sm:text-sm font-serif select-none">
+                              {/* 3. Quantity: Responsive Stepper with high-contrast text */}
+                              <div className="col-span-2 flex items-center justify-center gap-1.5 sm:gap-2.5 text-xs sm:text-sm font-serif select-none">
                                 <motion.button
                                   whileTap={{ scale: 0.8 }}
                                   type="button"
@@ -445,12 +450,12 @@ Notification automatically generated via EcoTex Storefront.`;
                                     const step = item.quantity > 500 ? 500 : 1;
                                     onUpdateQuantity(item.id, Math.max(1, item.quantity - step));
                                   }}
-                                  className="w-6 h-6 rounded-full border border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#555] hover:text-[#000] flex items-center justify-center transition-colors cursor-pointer text-sm leading-none"
+                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#1c1b18] flex items-center justify-center transition-colors cursor-pointer text-sm leading-none font-bold"
                                   aria-label="Decrease quantity"
                                 >
                                   –
                                 </motion.button>
-                                <span className="font-mono text-xs sm:text-sm font-medium tabular-nums min-w-[24px] text-center">
+                                <span className="font-mono text-xs sm:text-sm font-bold text-[#1c1b18] tabular-nums min-w-[28px] text-center px-1">
                                   {item.quantity < 1000 ? item.quantity : `${item.quantity.toLocaleString()}`}
                                 </span>
                                 <motion.button
@@ -460,7 +465,7 @@ Notification automatically generated via EcoTex Storefront.`;
                                     const step = item.quantity >= 500 ? 500 : 1;
                                     onUpdateQuantity(item.id, item.quantity + step);
                                   }}
-                                  className="w-6 h-6 rounded-full border border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#555] hover:text-[#000] flex items-center justify-center transition-colors cursor-pointer text-sm leading-none"
+                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#1c1b18] flex items-center justify-center transition-colors cursor-pointer text-sm leading-none font-bold"
                                   aria-label="Increase quantity"
                                 >
                                   +

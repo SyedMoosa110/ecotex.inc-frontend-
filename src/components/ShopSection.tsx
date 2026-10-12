@@ -732,15 +732,20 @@ export const ShopSection: React.FC<ShopSectionProps> = ({
                     </h3>
 
                     <div className="flex items-center justify-between">
-                      <span className="font-black text-xl sm:text-2xl text-stone-900">
-                        ${product.pricePerUnit.toFixed(2)}
-                      </span>
+                      <div>
+                        <span className="font-black text-xl sm:text-2xl text-stone-900 block leading-tight">
+                          ${product.pricePerUnit.toFixed(2)}
+                        </span>
+                        <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md inline-block mt-1 border border-emerald-200/70">
+                          {product.moq > 1 ? `MOQ: ${product.moq.toLocaleString()} pcs` : 'Min Qty: 1 pc'}
+                        </span>
+                      </div>
 
                       {/* Outline Shopping Cart Button */}
                       <button
                         onClick={(e) => handleQuickAdd(product, e)}
                         aria-label={`Add ${product.name} to cart`}
-                        className="w-11 h-11 rounded-2xl border border-stone-300 hover:border-stone-900 hover:bg-stone-900 hover:text-white text-stone-700 flex items-center justify-center transition-colors shadow-2xs active:scale-95 cursor-pointer"
+                        className="w-11 h-11 rounded-2xl border border-stone-300 hover:border-stone-900 hover:bg-stone-900 hover:text-white text-stone-700 flex items-center justify-center transition-colors shadow-2xs active:scale-95 cursor-pointer shrink-0"
                       >
                         <ShoppingCart className="w-5 h-5 stroke-[2]" />
                       </button>

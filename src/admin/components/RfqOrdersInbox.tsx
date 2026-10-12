@@ -220,7 +220,7 @@ export const RfqOrdersInbox: React.FC = () => {
                 <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-black uppercase tracking-wider text-slate-500">
                   <th className="py-4 px-6">RFQ ID & Date</th>
                   <th className="py-4 px-6">Buyer & Organization</th>
-                  <th className="py-4 px-6">Product & Volume</th>
+                  <th className="py-4 px-6">Product & Quantity / Volume</th>
                   <th className="py-4 px-6">Printing Requirement</th>
                   <th className="py-4 px-6">Status</th>
                   <th className="py-4 px-6 text-right">Actions</th>
@@ -250,10 +250,15 @@ export const RfqOrdersInbox: React.FC = () => {
                         <div className="text-[11px] text-slate-400 mt-0.5">{q.email}</div>
                       </td>
 
-                      {/* Product & Volume */}
+                      {/* Product & Quantity / Volume */}
                       <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-800 capitalize">{q.category} series</div>
-                        <div className="text-[11px] font-black text-[#4E9F76] mt-0.5">{q.volume}</div>
+                        <div className="font-semibold text-slate-800 capitalize">
+                          {q.category || q.bagType || 'Wholesale Packaging'}
+                        </div>
+                        <div className="text-[11px] font-black text-[#4E9F76] mt-0.5 flex items-center gap-1">
+                          <span className="text-slate-400 font-normal">Qty:</span>
+                          <span>{q.volume || (q.quantity ? `${Number(q.quantity).toLocaleString()} units` : '1,000 units')}</span>
+                        </div>
                       </td>
 
                       {/* Printing */}
@@ -346,12 +351,15 @@ export const RfqOrdersInbox: React.FC = () => {
                       <td className="py-4 px-6">
                         {o.items && o.items.length > 0 ? (
                           o.items.map((item, idx) => (
-                            <div key={idx} className="line-clamp-1 font-medium text-slate-700">
-                              {(item.quantity || 1).toLocaleString()}x {item.productName || item.name || 'Custom Bag'}
+                            <div key={idx} className="line-clamp-1 font-medium text-slate-700 flex items-center gap-1.5">
+                              <span className="font-bold text-[#4E9F76]">
+                                {(Number(item.quantity) || 1).toLocaleString()}x
+                              </span>
+                              <span>{item.productName || item.name || 'Custom Bag'}</span>
                             </div>
                           ))
                         ) : (
-                          <div className="text-slate-400 italic">Custom Spec Packaging</div>
+                          <div className="text-slate-500 font-medium">Qty: 1,000x Custom Spec Packaging</div>
                         )}
                       </td>
 
@@ -455,8 +463,10 @@ export const RfqOrdersInbox: React.FC = () => {
                   <span className="font-bold text-[#0f172a] capitalize">{selectedQuote.category}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-semibold">Order Volume:</span>
-                  <span className="font-black text-[#4E9F76]">{selectedQuote.volume}</span>
+                  <span className="text-slate-500 font-semibold">Order Quantity / Volume:</span>
+                  <span className="font-black text-[#4E9F76]">
+                    {selectedQuote.volume || (selectedQuote.quantity ? `${Number(selectedQuote.quantity).toLocaleString()} units` : '1,000 units')}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500 font-semibold">Printing Specification:</span>
