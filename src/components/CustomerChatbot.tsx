@@ -416,7 +416,7 @@ export const CustomerChatbot: React.FC = () => {
           {showIdentityForm && (
             <div className="p-4 bg-emerald-50/95 border-t border-emerald-200 text-xs space-y-3 animate-in fade-in duration-150">
               <div className="flex items-center justify-between">
-                {/* Mode Selector Tabs: WhatsApp (80% preference) vs Email */}
+                {/* Mode Selector Tabs: WhatsApp vs Email */}
                 <div className="flex items-center gap-1 p-0.5 bg-white rounded-xl border border-emerald-200">
                   <button
                     type="button"
@@ -428,7 +428,7 @@ export const CustomerChatbot: React.FC = () => {
                     }`}
                   >
                     <WhatsAppIcon className="w-3.5 h-3.5" />
-                    <span>WhatsApp (80% Prefer)</span>
+                    <span>WhatsApp</span>
                   </button>
                   <button
                     type="button"
