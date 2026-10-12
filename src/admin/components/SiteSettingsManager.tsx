@@ -156,9 +156,35 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogo
     }
   }, [saveToast.show]);
 
-  // Generic Field Updater
+  // Generic Field Updater with Cross-Field Sync
   const handleFieldChange = (field: keyof SiteSettings, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updates: any = { [field]: value };
+      if (field === 'whatsappNumber') {
+        updates.orderNotifications = {
+          emailEnabled: prev.orderNotifications?.emailEnabled ?? true,
+          notificationEmail: prev.orderNotifications?.notificationEmail || prev.email || 'orders@ecotexinc.com',
+          whatsappEnabled: prev.orderNotifications?.whatsappEnabled ?? true,
+          whatsappGreeting: prev.orderNotifications?.whatsappGreeting || 'New Wholesale Order Received on EcoTex Storefront',
+          autoOpenWhatsapp: prev.orderNotifications?.autoOpenWhatsapp ?? true,
+          ...(prev.orderNotifications || {}),
+          whatsappNumber: value
+        };
+      } else if (field === 'email' || field === 'supportEmail') {
+        updates.email = value;
+        updates.supportEmail = value;
+        updates.orderNotifications = {
+          emailEnabled: prev.orderNotifications?.emailEnabled ?? true,
+          whatsappEnabled: prev.orderNotifications?.whatsappEnabled ?? true,
+          whatsappNumber: prev.orderNotifications?.whatsappNumber || prev.whatsappNumber || prev.phone || '+1 (951) 450-9773',
+          whatsappGreeting: prev.orderNotifications?.whatsappGreeting || 'New Wholesale Order Received on EcoTex Storefront',
+          autoOpenWhatsapp: prev.orderNotifications?.autoOpenWhatsapp ?? true,
+          ...(prev.orderNotifications || {}),
+          notificationEmail: value
+        };
+      }
+      return { ...prev, ...updates };
+    });
   };
 
   // Nested LogoConfig Updater
@@ -172,21 +198,37 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogo
     }));
   };
 
-  // Order Notifications Updater
+  // Order Notifications & Communication Channels Updater
   const handleOrderNotifChange = (field: keyof OrderNotificationsConfig, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      orderNotifications: {
+    setFormData(prev => {
+      const updatedNotif = {
         emailEnabled: prev.orderNotifications?.emailEnabled ?? true,
         notificationEmail: prev.orderNotifications?.notificationEmail || prev.email || 'orders@ecotexinc.com',
         whatsappEnabled: prev.orderNotifications?.whatsappEnabled ?? true,
-        whatsappNumber: prev.orderNotifications?.whatsappNumber || prev.phone || '+1 (951) 450-9773',
+        whatsappNumber: prev.orderNotifications?.whatsappNumber || prev.whatsappNumber || prev.phone || '+1 (951) 450-9773',
         whatsappGreeting: prev.orderNotifications?.whatsappGreeting || 'New Wholesale Order Received on EcoTex Storefront',
         autoOpenWhatsapp: prev.orderNotifications?.autoOpenWhatsapp ?? true,
         ...(prev.orderNotifications || {}),
         [field]: value
+      };
+
+      const syncUpdates: Partial<SiteSettings> = {
+        orderNotifications: updatedNotif
+      };
+
+      if (field === 'whatsappNumber') {
+        syncUpdates.whatsappNumber = value;
       }
-    }));
+      if (field === 'notificationEmail') {
+        syncUpdates.supportEmail = value;
+        syncUpdates.email = value;
+      }
+
+      return {
+        ...prev,
+        ...syncUpdates
+      };
+    });
   };
 
   // Test WhatsApp Alert
@@ -442,7 +484,7 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogo
           {[
             { id: 'identity', label: 'Site Identity & SEO', icon: Globe },
             { id: 'account', label: 'Admin Account & Security', icon: User },
-            { id: 'notifications', label: 'Order Notifications (Email & WhatsApp)', icon: Bell },
+            { id: 'notifications', label: 'WhatsApp & Email Channels (Chatbot & Alerts)', icon: Bell },
             { id: 'announcement', label: 'Header Announcement', icon: Megaphone },
             { id: 'business', label: 'Business & Contacts', icon: Building2 },
             { id: 'commerce', label: 'Store Defaults', icon: DollarSign }
@@ -1277,14 +1319,29 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogo
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Primary Sales Email
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Primary Sales & Support Email</span>
+                <span className="text-[10px] text-[#166534] font-bold">Chatbot Quotes</span>
               </label>
               <input
                 type="email"
                 value={formData.email || ''}
                 onChange={(e) => handleFieldChange('email', e.target.value)}
                 className="w-full px-4 py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:border-[#166534] focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Official Desk WhatsApp Number</span>
+                <span className="text-[10px] text-[#25D366] font-bold">Chatbot & Direct Chat</span>
+              </label>
+              <input
+                type="text"
+                placeholder="+1 (951) 450-9773 or +92 330 8738606"
+                value={formData.whatsappNumber || formData.orderNotifications?.whatsappNumber || ''}
+                onChange={(e) => handleFieldChange('whatsappNumber', e.target.value)}
+                className="w-full px-4 py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:border-[#25D366] focus:outline-none font-semibold text-slate-900"
               />
             </div>
 

@@ -264,7 +264,9 @@ export interface SiteSettings {
   announcementActive?: boolean;
   phone: string;
   secondaryPhone?: string;
+  whatsappNumber?: string;
   email: string;
+  supportEmail?: string;
   facilityAddress: string;
   plantAddress?: string;
   minOrderNotice: string;

@@ -67,12 +67,20 @@ export const CustomerChatbot: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Official desk WhatsApp number from store settings
-  const officialPhone = siteSettings?.orderNotifications?.whatsappNumber 
+  // Official desk WhatsApp number and Email from store settings (Fully Dynamic from Admin)
+  const officialPhone = siteSettings?.whatsappNumber
+    || siteSettings?.orderNotifications?.whatsappNumber 
     || siteSettings?.contactConfig?.secondaryPhone 
     || siteSettings?.contactConfig?.phone 
+    || siteSettings?.phone
     || '+1 (951) 450-9773';
   const cleanOfficialNumber = officialPhone.replace(/[^0-9]/g, '') || '19514509773';
+
+  const officialEmail = siteSettings?.supportEmail
+    || siteSettings?.email
+    || siteSettings?.orderNotifications?.notificationEmail
+    || siteSettings?.contactConfig?.email
+    || 'orders@ecotexinc.com';
 
   // Construct dynamic WhatsApp chat link
   const currentQuery = activeThread?.messages?.filter(m => m.sender === 'customer')?.slice(-1)?.[0]?.text 
@@ -172,7 +180,7 @@ export const CustomerChatbot: React.FC = () => {
           id: `bot-${Date.now()}`,
           sender: 'bot',
           senderName: 'EcoTex Support Desk',
-          text: `Thank you for reaching out to EcoTex! We have received your inquiry. For immediate assistance or digital mockups, you can also connect directly via WhatsApp (${officialPhone}) below.`,
+          text: `Thank you for reaching out to EcoTex! We have received your inquiry. For immediate assistance or digital mockups, you can also reach our desk via WhatsApp (${officialPhone}) or email us at ${officialEmail}.`,
           timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 

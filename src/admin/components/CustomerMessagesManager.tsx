@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   MessageSquare, 
   Send, 
@@ -22,7 +23,9 @@ import {
   HelpCircle,
   ChevronRight,
   ShieldCheck,
-  RefreshCw
+  RefreshCw,
+  Smartphone,
+  Settings
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { ChatMessage, CustomerThread } from '../../types';
@@ -59,7 +62,7 @@ const QUICK_REPLIES = [
 ];
 
 export const CustomerMessagesManager: React.FC = () => {
-  const { quotes } = useStore();
+  const { quotes, siteSettings, updateSiteSettings } = useStore();
 
   const [threads, setThreads] = useState<CustomerThread[]>(() => getStoredThreads());
 
@@ -137,7 +140,61 @@ export const CustomerMessagesManager: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<'All' | 'Unread' | 'New' | 'In Discussion' | 'Resolved'>('All');
   const [replyText, setReplyText] = useState('');
   const [showNewThreadModal, setShowNewThreadModal] = useState(false);
+  const [showChannelModal, setShowChannelModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Quick Desk Channels State (WhatsApp & Email)
+  const currentWhatsApp = siteSettings?.whatsappNumber || siteSettings?.orderNotifications?.whatsappNumber || '+1 (951) 450-9773';
+  const currentEmail = siteSettings?.supportEmail || siteSettings?.email || 'orders@ecotexinc.com';
+  const [deskWhatsApp, setDeskWhatsApp] = useState(currentWhatsApp);
+  const [deskEmail, setDeskEmail] = useState(currentEmail);
+
+  useEffect(() => {
+    if (showChannelModal) {
+      setDeskWhatsApp(siteSettings?.whatsappNumber || siteSettings?.orderNotifications?.whatsappNumber || '+1 (951) 450-9773');
+      setDeskEmail(siteSettings?.supportEmail || siteSettings?.email || 'orders@ecotexinc.com');
+    }
+  }, [showChannelModal, siteSettings]);
+
+  // Lock body scroll and handle Escape key for modals
+  useEffect(() => {
+    if (!showNewThreadModal && !showChannelModal) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowNewThreadModal(false);
+        setShowChannelModal(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showNewThreadModal, showChannelModal]);
+
+  const handleSaveDeskChannels = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPhone = deskWhatsApp.trim();
+    const cleanEmail = deskEmail.trim();
+
+    updateSiteSettings({
+      whatsappNumber: cleanPhone,
+      email: cleanEmail,
+      supportEmail: cleanEmail,
+      orderNotifications: {
+        ...(siteSettings?.orderNotifications || { emailEnabled: true, whatsappEnabled: true, autoOpenWhatsapp: true }),
+        whatsappNumber: cleanPhone,
+        notificationEmail: cleanEmail
+      }
+    });
+
+    setShowChannelModal(false);
+    showToast('Official Desk WhatsApp & Email updated across website & live chatbot!');
+  };
 
   // New Thread Form State
   const [newThreadData, setNewThreadData] = useState({
@@ -302,6 +359,27 @@ export const CustomerMessagesManager: React.FC = () => {
 
         {/* Quick Connection Action Buttons */}
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowChannelModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200/90 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-all cursor-pointer shadow-2xs hover:border-slate-300"
+            title="Configure Desk WhatsApp & Support Email used by Live Chatbot"
+          >
+            <div className="flex items-center gap-1.5 text-emerald-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <Smartphone className="w-3.5 h-3.5" />
+              <span className="font-semibold">{currentWhatsApp}</span>
+            </div>
+            <span className="text-slate-300">|</span>
+            <div className="flex items-center gap-1.5 text-slate-600">
+              <Mail className="w-3.5 h-3.5" />
+              <span className="font-semibold">{currentEmail}</span>
+            </div>
+            <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] text-slate-500 font-bold ml-1">
+              Change
+            </span>
+          </button>
+
           <button
             onClick={() => setShowNewThreadModal(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#4E9F76] hover:bg-[#3d8560] text-white font-bold text-xs shadow-md shadow-[#4E9F76]/20 transition-all cursor-pointer"
@@ -689,12 +767,12 @@ export const CustomerMessagesManager: React.FC = () => {
       </div>
 
       {/* ========================================================
-          MODAL: CREATE NEW INBOUND THREAD - Centered with Blurry Backdrop
+          MODAL: CREATE NEW INBOUND THREAD - Centered with Blurry Backdrop in Portal
          ======================================================== */}
-      {showNewThreadModal && (
+      {showNewThreadModal && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setShowNewThreadModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -702,7 +780,7 @@ export const CustomerMessagesManager: React.FC = () => {
           >
             <button
               onClick={() => setShowNewThreadModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -805,7 +883,107 @@ export const CustomerMessagesManager: React.FC = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ========================================================
+          MODAL: QUICK DESK CHANNELS (WHATSAPP & EMAIL) - Centered in Portal
+         ======================================================== */}
+      {showChannelModal && typeof document !== 'undefined' && createPortal(
+        <div 
+          onClick={() => setShowChannelModal(false)}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl shadow-black/50 border border-slate-200/80 space-y-5 animate-in fade-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-[#0f172a]">
+                    Desk Contact Channels
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Live Chatbot & Storefront Contact Targets
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowChannelModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDeskChannels} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Official Desk WhatsApp Number *</span>
+                  <span className="text-[10px] text-emerald-600 font-bold">Direct wa.me link</span>
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={deskWhatsApp}
+                    onChange={(e) => setDeskWhatsApp(e.target.value)}
+                    placeholder="+92 330 8738606 or +1 (951) 450-9773"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl focus:border-[#25D366] focus:outline-none font-semibold text-slate-900 text-xs"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Customer chatbot "WhatsApp" button, quick questions, and direct chat links will instantly open this WhatsApp number.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Official Support & Sales Email *</span>
+                  <span className="text-[10px] text-emerald-600 font-bold">PDF Quotes</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    value={deskEmail}
+                    onChange={(e) => setDeskEmail(e.target.value)}
+                    placeholder="orders@ecotexinc.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl focus:border-[#166534] focus:outline-none font-semibold text-slate-900 text-xs"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Email captured from the chatbot and formal quote requests will route to this address.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowChannelModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#166534] hover:bg-[#15803d] text-white font-bold text-xs shadow-md shadow-emerald-900/20 cursor-pointer"
+                >
+                  Save & Apply Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>
