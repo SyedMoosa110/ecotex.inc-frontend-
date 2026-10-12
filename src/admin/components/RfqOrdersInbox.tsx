@@ -431,11 +431,11 @@ export const RfqOrdersInbox: React.FC = () => {
         </div>
       )}
 
-      {/* Quote Detail Modal - Centered with Blurry Backdrop */}
-      {selectedQuote && (
+      {/* Quote Detail Modal - Centered with Blurry Backdrop in Document Portal */}
+      {selectedQuote && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setSelectedQuote(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -529,14 +529,15 @@ export const RfqOrdersInbox: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Order Detail Modal - Centered with Blurry Backdrop */}
-      {selectedOrder && (
+      {/* Order Detail Modal - Centered with Blurry Backdrop in Document Portal */}
+      {selectedOrder && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setSelectedOrder(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -655,7 +656,8 @@ export const RfqOrdersInbox: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
