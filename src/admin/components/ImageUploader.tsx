@@ -11,6 +11,7 @@ import {
   Eye,
   FileCheck
 } from 'lucide-react';
+import { BASE_URL } from '../../services/apiService';
 
 interface ImageUploaderProps {
   label: string;
@@ -78,7 +79,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         // 2. Persist to server disk in background
         try {
-          const res = await fetch('/api/upload', {
+          const res = await fetch(`${BASE_URL}/upload`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ data: base64Data, filename: file.name })

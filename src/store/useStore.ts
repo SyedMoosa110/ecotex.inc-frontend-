@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Product, CategoryItem, Order, QuoteSubmission, SiteSettings, CartItem } from '../types';
 import { PRODUCTS } from '../data/products';
+import { BASE_URL } from '../services/apiService';
 
 export interface HeroConfig {
   title: string;
@@ -595,7 +596,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
     // Verification against master credentials or backend
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: cleanEmail, password: cleanPass })
@@ -671,7 +672,7 @@ export const useStore = create<StoreState>((set, get) => ({
       const newConfig = { ...state.heroConfig, ...updates };
       saveLocal('hero_config', newConfig);
       // Sync with server if online
-      fetch('/api/settings', {
+      fetch(`${BASE_URL}/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ heroConfig: newConfig })
@@ -683,7 +684,7 @@ export const useStore = create<StoreState>((set, get) => ({
   // Live Server Data Synchronization
   fetchSettings: async () => {
     try {
-      const res = await fetch('/api/settings');
+      const res = await fetch(`${BASE_URL}/settings`);
       if (res.ok) {
         const serverSettings = await res.json();
         if (serverSettings && typeof serverSettings === 'object' && Object.keys(serverSettings).length > 0) {
@@ -703,12 +704,14 @@ export const useStore = create<StoreState>((set, get) => ({
 
   fetchAllData: async () => {
     try {
-      const [settingsRes, prodRes, catRes, ordsRes, qtsRes] = await Promise.allSettled([
-        fetch('/api/settings').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/products').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/categories').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/orders').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/quotes').then((r) => (r.ok ? r.json() : null)),
+      const [settingsRes, prodRes, catRes, ordsRes, qtsRes, statsRes, msgsRes] = await Promise.allSettled([
+        fetch(`${BASE_URL}/settings`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`${BASE_URL}/products`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`${BASE_URL}/categories`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`${BASE_URL}/orders`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`${BASE_URL}/quotes`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`${BASE_URL}/stats`).then((r) => (r.ok ? r.json() : null)),
+        fetch(`${BASE_URL}/messages`).then((r) => (r.ok ? r.json() : null)),
       ]);
 
       if (settingsRes.status === 'fulfilled' && settingsRes.value) {
@@ -727,17 +730,17 @@ export const useStore = create<StoreState>((set, get) => ({
         }
       }
 
-      if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value) && prodRes.value.length > 0) {
+      if (prodRes.status === 'fulfilled' && Array.isArray(prodRes.value)) {
         set({ products: prodRes.value });
         saveLocal('products', prodRes.value);
       }
 
-      if (catRes.status === 'fulfilled' && Array.isArray(catRes.value) && catRes.value.length > 0) {
+      if (catRes.status === 'fulfilled' && Array.isArray(catRes.value)) {
         set({ categories: catRes.value });
         saveLocal('categories', catRes.value);
       }
 
-      if (ordsRes.status === 'fulfilled' && Array.isArray(ordsRes.value) && ordsRes.value.length > 0) {
+      if (ordsRes.status === 'fulfilled' && Array.isArray(ordsRes.value)) {
         const serverOrders = ordsRes.value;
         set((state) => {
           const grossRev = serverOrders.reduce((sum, o) => sum + (Number(o.total || o.totalAmount) || 0), 0);
@@ -753,7 +756,7 @@ export const useStore = create<StoreState>((set, get) => ({
         saveLocal('orders', serverOrders);
       }
 
-      if (qtsRes.status === 'fulfilled' && Array.isArray(qtsRes.value) && qtsRes.value.length > 0) {
+      if (qtsRes.status === 'fulfilled' && Array.isArray(qtsRes.value)) {
         const serverQuotes = qtsRes.value;
         set((state) => ({
           quotes: serverQuotes,
@@ -764,6 +767,34 @@ export const useStore = create<StoreState>((set, get) => ({
         }));
         saveLocal('quotes', serverQuotes);
       }
+
+      if (statsRes.status === 'fulfilled' && statsRes.value) {
+        const s = statsRes.value;
+        set((state) => ({
+          analytics: {
+            ...state.analytics,
+            totalOrdersCount: typeof s.totalOrders === 'number' ? s.totalOrders : state.analytics.totalOrdersCount,
+            grossRevenue: typeof s.grossRevenue === 'number' ? s.grossRevenue : state.analytics.grossRevenue,
+            quoteRequestsCount: typeof s.totalQuotes === 'number' ? s.totalQuotes : state.analytics.quoteRequestsCount,
+            bagsDisplaced: typeof s.bagsDisplacedEstimate === 'number' ? s.bagsDisplacedEstimate : state.analytics.bagsDisplaced,
+          }
+        }));
+      }
+
+      if (msgsRes.status === 'fulfilled' && Array.isArray(msgsRes.value) && msgsRes.value.length > 0) {
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('ecotex_customer_messages_v1');
+            const local = raw ? JSON.parse(raw) : [];
+            const map = new Map();
+            if (Array.isArray(local)) local.forEach((t: any) => map.set(t.id, t));
+            msgsRes.value.forEach((t: any) => map.set(t.id, t));
+            const merged = Array.from(map.values());
+            localStorage.setItem('ecotex_customer_messages_v1', JSON.stringify(merged));
+            window.dispatchEvent(new CustomEvent('ecotex_messages_updated', { detail: merged }));
+          } catch (_) {}
+        }
+      }
     } catch (err) {
       console.warn('Failed to sync live data from server:', err);
     }
@@ -773,12 +804,12 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const newSettings = { ...state.siteSettings, ...updates };
       saveLocal('site_settings', newSettings);
-      fetch('/api/settings', {
+      fetch(`${BASE_URL}/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSettings)
       }).catch((err) => {
-        console.warn('Failed to persist settings to /api/settings:', err);
+        console.warn('Failed to persist settings to API:', err);
       });
       return { siteSettings: newSettings };
     });
@@ -801,7 +832,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = [newProduct, ...state.products];
       saveLocal('products', updated);
-      fetch('/api/products', {
+      fetch(`${BASE_URL}/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProduct)
@@ -814,7 +845,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = state.products.map((p) => (p.id === id ? { ...p, ...updates } : p));
       saveLocal('products', updated);
-      fetch(`/api/products/${id}`, {
+      fetch(`${BASE_URL}/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -827,7 +858,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = state.products.filter((p) => p.id !== id);
       saveLocal('products', updated);
-      fetch(`/api/products/${id}`, { method: 'DELETE' }).catch(() => {});
+      fetch(`${BASE_URL}/products/${id}`, { method: 'DELETE' }).catch(() => {});
       return { products: updated };
     });
   },
@@ -836,7 +867,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = state.products.map((p) => (p.id === id ? { ...p, inStock: !p.inStock } : p));
       saveLocal('products', updated);
-      fetch(`/api/products/${id}/toggle-stock`, { method: 'PATCH' }).catch(() => {});
+      fetch(`${BASE_URL}/products/${id}/toggle-stock`, { method: 'PATCH' }).catch(() => {});
       return { products: updated };
     });
   },
@@ -856,7 +887,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = [...state.categories, newCat];
       saveLocal('categories', updated);
-      fetch('/api/categories', {
+      fetch(`${BASE_URL}/categories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCat)
@@ -869,7 +900,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = state.categories.map((c) => (c.id === id ? { ...c, ...updates } : c));
       saveLocal('categories', updated);
-      fetch(`/api/categories/${id}`, {
+      fetch(`${BASE_URL}/categories/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -882,7 +913,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = state.categories.filter((c) => c.id !== id);
       saveLocal('categories', updated);
-      fetch(`/api/categories/${id}`, { method: 'DELETE' }).catch(() => {});
+      fetch(`${BASE_URL}/categories/${id}`, { method: 'DELETE' }).catch(() => {});
       return { categories: updated };
     });
   },
@@ -912,7 +943,7 @@ export const useStore = create<StoreState>((set, get) => ({
   // Orders & Quotes Fetching
   fetchOrders: async () => {
     try {
-      const res = await fetch('/api/orders');
+      const res = await fetch(`${BASE_URL}/orders`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -939,7 +970,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
   fetchQuotes: async () => {
     try {
-      const res = await fetch('/api/quotes');
+      const res = await fetch(`${BASE_URL}/quotes`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -1009,7 +1040,7 @@ export const useStore = create<StoreState>((set, get) => ({
     });
 
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch(`${BASE_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newOrder)
@@ -1033,7 +1064,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = state.orders.map((o) => (o.id === id ? { ...o, status } : o));
       saveLocal('orders', updated);
-      fetch(`/api/orders/${id}/status`, {
+      fetch(`${BASE_URL}/orders/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -1068,7 +1099,7 @@ export const useStore = create<StoreState>((set, get) => ({
     });
 
     try {
-      const res = await fetch('/api/quotes', {
+      const res = await fetch(`${BASE_URL}/quotes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newQuote)
@@ -1092,7 +1123,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => {
       const updated = state.quotes.map((q) => (q.id === id ? { ...q, status } : q));
       saveLocal('quotes', updated);
-      fetch(`/api/quotes/${id}/status`, {
+      fetch(`${BASE_URL}/quotes/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })

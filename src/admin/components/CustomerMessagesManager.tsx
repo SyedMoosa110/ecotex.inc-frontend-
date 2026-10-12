@@ -31,6 +31,7 @@ import {
   saveStoredThreads, 
   subscribeToMessages, 
   sendAdminReply,
+  fetchRemoteThreads,
   INITIAL_THREADS 
 } from '../../services/messageService';
 
@@ -62,8 +63,14 @@ export const CustomerMessagesManager: React.FC = () => {
 
   const [threads, setThreads] = useState<CustomerThread[]>(() => getStoredThreads());
 
-  // Real-time synchronization with Frontend Chatbot
+  // Real-time synchronization with Frontend Chatbot and Server
   useEffect(() => {
+    fetchRemoteThreads().then((remote) => {
+      if (remote && remote.length > 0) {
+        setThreads(remote);
+      }
+    });
+
     const unsubscribe = subscribeToMessages((updatedThreads) => {
       setThreads(updatedThreads);
     });

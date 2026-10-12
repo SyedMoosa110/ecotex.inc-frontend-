@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Package, 
   Plus, 
@@ -460,21 +461,21 @@ export const ProductCatalogManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal: Create or Edit Product - Centered with Blurry Backdrop */}
-      {isModalOpen && (
+      {/* Modal: Create or Edit Product - Centered with Blurry Backdrop in Document Portal */}
+      {isModalOpen && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setIsModalOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-white rounded-3xl max-w-4xl lg:max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl shadow-black/40 border border-slate-200/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="relative bg-white rounded-3xl max-w-4xl lg:max-w-5xl w-full max-h-[88vh] flex flex-col shadow-2xl shadow-black/50 border border-slate-200/80 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200"
           >
             
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-[#fbfdfb] shrink-0">
+            <div className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-[#fbfdfb] shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#4E9F76]/15 text-[#4E9F76] flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-2xl bg-[#4E9F76]/15 text-[#4E9F76] flex items-center justify-center font-bold">
                   <Package className="w-5 h-5" />
                 </div>
                 <div>
@@ -496,11 +497,11 @@ export const ProductCatalogManager: React.FC = () => {
             </div>
 
             {/* Modal Scrollable Body */}
-            <form id="product-form" onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto p-5 sm:p-7">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+            <form id="product-form" onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
                 
                 {/* Left Column: Product Specifications (Col 1-7) */}
-                <div className="lg:col-span-7 space-y-4">
+                <div className="lg:col-span-7 space-y-3.5">
                   
                   {/* Product Title */}
                   <div>
@@ -512,13 +513,13 @@ export const ProductCatalogManager: React.FC = () => {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] focus:ring-1 focus:ring-[#4E9F76] transition-all"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] focus:ring-1 focus:ring-[#4E9F76] transition-all"
                       placeholder="e.g. Heavy-Duty Gusseted Supermarket Tote"
                     />
                   </div>
 
                   {/* Category & Highlight Badge */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
                         Category *
@@ -534,7 +535,7 @@ export const ProductCatalogManager: React.FC = () => {
                             categoryLabel: found ? found.label : 'Wholesale Packaging'
                           });
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] cursor-pointer transition-all"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] cursor-pointer transition-all"
                       >
                         {categoriesList.map(c => (
                           <option key={c.id} value={c.id}>{c.label}</option>
@@ -549,7 +550,7 @@ export const ProductCatalogManager: React.FC = () => {
                       <select
                         value={formData.badge}
                         onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] cursor-pointer transition-all"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] cursor-pointer transition-all"
                       >
                         {badgesList.map(b => (
                           <option key={b} value={b}>{b}</option>
@@ -559,7 +560,7 @@ export const ProductCatalogManager: React.FC = () => {
                   </div>
 
                   {/* Price, MOQ, GSM with Unit Badges */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2.5">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
                         Price / Unit ($) *
@@ -572,7 +573,7 @@ export const ProductCatalogManager: React.FC = () => {
                           required
                           value={formData.pricePerUnit}
                           onChange={(e) => setFormData({ ...formData, pricePerUnit: parseFloat(e.target.value) || 0 })}
-                          className="w-full pl-6 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-[#4E9F76] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
+                          className="w-full pl-6 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-[#4E9F76] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
                         />
                       </div>
                     </div>
@@ -588,9 +589,9 @@ export const ProductCatalogManager: React.FC = () => {
                           required
                           value={formData.moq}
                           onChange={(e) => setFormData({ ...formData, moq: parseInt(e.target.value) || 1000 })}
-                          className="w-full pl-3 pr-9 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
+                          className="w-full pl-3 pr-8 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">pcs</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">pcs</span>
                       </div>
                     </div>
 
@@ -603,15 +604,15 @@ export const ProductCatalogManager: React.FC = () => {
                           type="number"
                           value={formData.gsm}
                           onChange={(e) => setFormData({ ...formData, gsm: parseInt(e.target.value) || 80 })}
-                          className="w-full pl-3 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
+                          className="w-full pl-3 pr-9 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-[#0f172a] bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">g/m²</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">g/m²</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Dimensions & Material */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
                         Dimensions
@@ -620,7 +621,7 @@ export const ProductCatalogManager: React.FC = () => {
                         type="text"
                         value={formData.dimensions}
                         onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
                         placeholder="e.g. 12W x 14H x 4D"
                       />
                     </div>
@@ -633,7 +634,7 @@ export const ProductCatalogManager: React.FC = () => {
                         type="text"
                         value={formData.material}
                         onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] transition-all"
                         placeholder="e.g. Virgin Non-Woven Polypropylene"
                       />
                     </div>
@@ -645,21 +646,21 @@ export const ProductCatalogManager: React.FC = () => {
                       Product Description
                     </label>
                     <textarea
-                      rows={3}
+                      rows={2}
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Wholesale packaging details, retail application, and durability specifications..."
-                      className="w-full p-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] resize-none transition-all"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-[#4E9F76] resize-none transition-all"
                     />
                   </div>
 
                 </div>
 
                 {/* Right Column: Photography & Live Preview Mockup (Col 8-12) */}
-                <div className="lg:col-span-5 space-y-4">
+                <div className="lg:col-span-5 space-y-3.5">
                   
                   {/* Image Uploader Box */}
-                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/90 space-y-3">
+                  <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/90 space-y-2.5">
                     <ImageUploader
                       label="Product Photography"
                       description="Upload PNG with transparent background or photo"
@@ -670,16 +671,16 @@ export const ProductCatalogManager: React.FC = () => {
 
                     {/* Quick Presets Strip */}
                     <div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                         Quick Image Presets:
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1">
                         {PRODUCT_IMAGE_PRESETS.map((preset) => (
                           <button
                             type="button"
                             key={preset.url}
                             onClick={() => setFormData({ ...formData, image: preset.url })}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition-all cursor-pointer ${
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold border transition-all cursor-pointer ${
                               formData.image === preset.url
                                 ? 'bg-[#4E9F76] text-white border-[#4E9F76]'
                                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
@@ -693,14 +694,14 @@ export const ProductCatalogManager: React.FC = () => {
                   </div>
 
                   {/* Live Storefront Mockup Card Preview */}
-                  <div className="bg-[#fbfdfb] p-4 rounded-2xl border border-[#B2E2C5]/40 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="bg-[#fbfdfb] p-3 rounded-2xl border border-[#B2E2C5]/40 space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       <span>Live Catalog Card Preview</span>
-                      <span className="text-[#4E9F76] font-mono text-[10px]">Shop View</span>
+                      <span className="text-[#4E9F76] font-mono text-[9px]">Shop View</span>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-slate-200/80 p-3 shadow-xs flex items-center gap-3">
-                      <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                    <div className="bg-white rounded-2xl border border-slate-200/80 p-2.5 shadow-xs flex items-center gap-3">
+                      <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 p-1 shrink-0 flex items-center justify-center overflow-hidden">
                         <img
                           src={formData.image || '/images/bag-green.png'}
                           alt="Preview"
@@ -713,18 +714,18 @@ export const ProductCatalogManager: React.FC = () => {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#B2E2C5]/30 text-[#4E9F76]">
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#B2E2C5]/30 text-[#4E9F76]">
                             {formData.badge || 'Wholesale'}
                           </span>
                         </div>
-                        <div className="font-bold text-xs text-[#0f172a] truncate mt-1">
+                        <div className="font-bold text-xs text-[#0f172a] truncate mt-0.5">
                           {formData.name || 'Untitled Wholesale Product'}
                         </div>
-                        <div className="flex items-center justify-between mt-1 text-[11px]">
+                        <div className="flex items-center justify-between mt-0.5 text-[11px]">
                           <span className="font-black text-[#4E9F76]">
                             ${formData.pricePerUnit.toFixed(2)}/pc
                           </span>
-                          <span className="text-slate-400 font-medium">
+                          <span className="text-slate-400 font-medium text-[10px]">
                             MOQ: {formData.moq.toLocaleString()} pcs
                           </span>
                         </div>
@@ -735,17 +736,17 @@ export const ProductCatalogManager: React.FC = () => {
                   {/* Stock Availability Toggle Card */}
                   <div
                     onClick={() => setFormData({ ...formData, inStock: !formData.inStock })}
-                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                       formData.inStock
                         ? 'bg-emerald-50/70 border-emerald-200'
                         : 'bg-slate-50 border-slate-200'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
+                    <div className="flex items-center gap-2">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold ${
                         formData.inStock ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-400'
                       }`}>
-                        <Check className="w-4 h-4" />
+                        <Check className="w-3.5 h-3.5" />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-[#0f172a]">
@@ -771,23 +772,23 @@ export const ProductCatalogManager: React.FC = () => {
             </form>
 
             {/* Modal Fixed Sticky Footer */}
-            <div className="p-4 sm:p-5 border-t border-slate-100 bg-white/95 backdrop-blur-xs flex items-center justify-between shrink-0">
+            <div className="p-3.5 sm:p-4 border-t border-slate-100 bg-white/95 backdrop-blur-xs flex items-center justify-between shrink-0">
               <span className="text-[11px] text-slate-400 hidden sm:inline">
                 Changes sync real-time across wholesale shop and RFQ calculators
               </span>
 
-              <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-2.5 ml-auto">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   form="product-form"
-                  className="px-6 py-2.5 rounded-xl bg-[#4E9F76] hover:bg-[#3d8560] text-white text-xs font-bold transition-all shadow-md shadow-[#4E9F76]/20 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  className="px-6 py-2 rounded-xl bg-[#4E9F76] hover:bg-[#3d8560] text-white text-xs font-bold transition-all shadow-md shadow-[#4E9F76]/20 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {editingProduct ? 'Save Changes' : 'Create Product'}
                 </button>
@@ -795,21 +796,22 @@ export const ProductCatalogManager: React.FC = () => {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Delete Confirmation Modal - Centered with Blurry Backdrop */}
-      {isDeleteModalOpen && productToDelete && (
+      {/* Delete Confirmation Modal - Centered with Blurry Backdrop in Document Portal */}
+      {isDeleteModalOpen && productToDelete && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => {
             setIsDeleteModalOpen(false);
             setProductToDelete(null);
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl shadow-black/40 border border-red-200 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+            className="relative bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl shadow-black/40 border border-red-200 space-y-4 my-auto animate-in fade-in zoom-in-95 duration-200"
           >
             <div className="flex items-center gap-3 text-red-600">
               <div className="p-2 rounded-xl bg-red-50">
@@ -842,7 +844,8 @@ export const ProductCatalogManager: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

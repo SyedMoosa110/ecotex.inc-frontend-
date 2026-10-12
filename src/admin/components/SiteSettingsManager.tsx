@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { SiteSettings, LogoConfig, OrderNotificationsConfig } from '../../types';
+import { BASE_URL } from '../../services/apiService';
 
 interface SiteSettingsManagerProps {
   onLogout?: () => void;
@@ -222,7 +223,7 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogo
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      const res = await fetch('/api/upload', {
+      const res = await fetch(`${BASE_URL}/upload`, {
         method: 'POST',
         body: uploadFormData
       });
@@ -272,7 +273,7 @@ export const SiteSettingsManager: React.FC<SiteSettingsManagerProps> = ({ onLogo
       updateSiteSettings(formData);
 
       // 2. Persist to API Server
-      const res = await fetch('/api/settings', {
+      const res = await fetch(`${BASE_URL}/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

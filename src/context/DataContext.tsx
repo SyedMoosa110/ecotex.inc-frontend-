@@ -124,26 +124,45 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         apiService.getStats()
       ]);
 
-      if (prodsRes.status === 'fulfilled' && prodsRes.value.length > 0) {
+      if (prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value)) {
         setProducts(prodsRes.value);
+        useStore.setState({ products: prodsRes.value });
+        try { localStorage.setItem('ecotex_products', JSON.stringify(prodsRes.value)); } catch {}
       }
-      if (catsRes.status === 'fulfilled' && catsRes.value.length > 0) {
+      if (catsRes.status === 'fulfilled' && Array.isArray(catsRes.value)) {
         setCategories(catsRes.value);
+        useStore.setState({ categories: catsRes.value });
+        try { localStorage.setItem('ecotex_categories', JSON.stringify(catsRes.value)); } catch {}
       }
       if (setsRes.status === 'fulfilled' && setsRes.value) {
         setSettings(setsRes.value);
-        useStore.setState((state) => ({ siteSettings: { ...state.siteSettings, ...setsRes.value } }));
+        useStore.setState((state) => ({ 
+          siteSettings: { ...state.siteSettings, ...setsRes.value },
+          heroConfig: setsRes.value.heroConfig ? { ...state.heroConfig, ...setsRes.value.heroConfig } : state.heroConfig
+        }));
+        try { localStorage.setItem('ecotex_site_settings', JSON.stringify(setsRes.value)); } catch {}
       }
       if (ordsRes.status === 'fulfilled' && Array.isArray(ordsRes.value)) {
         setOrders(ordsRes.value);
         useStore.setState({ orders: ordsRes.value });
+        try { localStorage.setItem('ecotex_orders', JSON.stringify(ordsRes.value)); } catch {}
       }
       if (qtsRes.status === 'fulfilled' && Array.isArray(qtsRes.value)) {
         setQuotes(qtsRes.value);
         useStore.setState({ quotes: qtsRes.value });
+        try { localStorage.setItem('ecotex_quotes', JSON.stringify(qtsRes.value)); } catch {}
       }
-      if (statsRes.status === 'fulfilled') {
+      if (statsRes.status === 'fulfilled' && statsRes.value) {
         setStats(statsRes.value);
+        useStore.setState((state) => ({
+          analytics: {
+            ...state.analytics,
+            totalOrdersCount: typeof statsRes.value.totalOrders === 'number' ? statsRes.value.totalOrders : state.analytics.totalOrdersCount,
+            grossRevenue: typeof statsRes.value.grossRevenue === 'number' ? statsRes.value.grossRevenue : state.analytics.grossRevenue,
+            quoteRequestsCount: typeof statsRes.value.totalQuotes === 'number' ? statsRes.value.totalQuotes : state.analytics.quoteRequestsCount,
+            bagsDisplaced: typeof statsRes.value.bagsDisplacedEstimate === 'number' ? statsRes.value.bagsDisplacedEstimate : state.analytics.bagsDisplaced
+          }
+        }));
       }
     } catch (err) {
       console.warn('Backend API sync fallback, serving cached/static data:', err);
@@ -159,6 +178,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const addProduct = async (productData: Partial<Product>) => {
     const created = await apiService.createProduct(productData);
     setProducts(prev => [created, ...prev]);
+    useStore.setState((state) => {
+      const updated = [created, ...state.products.filter(p => p.id !== created.id)];
+      try { localStorage.setItem('ecotex_products', JSON.stringify(updated)); } catch {}
+      return { products: updated };
+    });
     refreshData();
     return created;
   };
@@ -166,6 +190,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const editProduct = async (id: string, updates: Partial<Product>) => {
     const updated = await apiService.updateProduct(id, updates);
     setProducts(prev => prev.map(p => p.id === id ? updated : p));
+    useStore.setState((state) => {
+      const prods = state.products.map(p => p.id === id ? { ...p, ...updated } : p);
+      try { localStorage.setItem('ecotex_products', JSON.stringify(prods)); } catch {}
+      return { products: prods };
+    });
     refreshData();
     return updated;
   };
@@ -173,29 +202,54 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const removeProduct = async (id: string) => {
     await apiService.deleteProduct(id);
     setProducts(prev => prev.filter(p => p.id !== id));
+    useStore.setState((state) => {
+      const prods = state.products.filter(p => p.id !== id);
+      try { localStorage.setItem('ecotex_products', JSON.stringify(prods)); } catch {}
+      return { products: prods };
+    });
     refreshData();
   };
 
   const toggleStock = async (id: string) => {
     const updated = await apiService.toggleStock(id);
     setProducts(prev => prev.map(p => p.id === id ? updated : p));
+    useStore.setState((state) => {
+      const prods = state.products.map(p => p.id === id ? updated : p);
+      try { localStorage.setItem('ecotex_products', JSON.stringify(prods)); } catch {}
+      return { products: prods };
+    });
   };
 
   const addCategory = async (catData: Partial<CategoryItem>) => {
     const created = await apiService.createCategory(catData);
     setCategories(prev => [...prev, created]);
+    useStore.setState((state) => {
+      const cats = [...state.categories, created];
+      try { localStorage.setItem('ecotex_categories', JSON.stringify(cats)); } catch {}
+      return { categories: cats };
+    });
     return created;
   };
 
   const editCategory = async (id: string, updates: Partial<CategoryItem>) => {
     const updated = await apiService.updateCategory(id, updates);
     setCategories(prev => prev.map(c => c.id === id ? updated : c));
+    useStore.setState((state) => {
+      const cats = state.categories.map(c => c.id === id ? { ...c, ...updated } : c);
+      try { localStorage.setItem('ecotex_categories', JSON.stringify(cats)); } catch {}
+      return { categories: cats };
+    });
     return updated;
   };
 
   const removeCategory = async (id: string) => {
     await apiService.deleteCategory(id);
     setCategories(prev => prev.filter(c => c.id !== id));
+    useStore.setState((state) => {
+      const cats = state.categories.filter(c => c.id !== id);
+      try { localStorage.setItem('ecotex_categories', JSON.stringify(cats)); } catch {}
+      return { categories: cats };
+    });
   };
 
   const saveSettings = async (updates: Partial<SiteSettings>) => {
@@ -208,24 +262,44 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const changeOrderStatus = async (id: string, status: string) => {
     const updated = await apiService.updateOrderStatus(id, status);
     setOrders(prev => prev.map(o => o.id === id ? updated : o));
+    useStore.setState((state) => {
+      const ords = state.orders.map(o => o.id === id ? updated : o);
+      try { localStorage.setItem('ecotex_orders', JSON.stringify(ords)); } catch {}
+      return { orders: ords };
+    });
     refreshData();
   };
 
   const removeOrder = async (id: string) => {
     await apiService.deleteOrder(id);
     setOrders(prev => prev.filter(o => o.id !== id));
+    useStore.setState((state) => {
+      const ords = state.orders.filter(o => o.id !== id);
+      try { localStorage.setItem('ecotex_orders', JSON.stringify(ords)); } catch {}
+      return { orders: ords };
+    });
     refreshData();
   };
 
   const changeQuoteStatus = async (id: string, status: string) => {
     const updated = await apiService.updateQuoteStatus(id, status);
     setQuotes(prev => prev.map(q => q.id === id ? updated : q));
+    useStore.setState((state) => {
+      const qts = state.quotes.map(q => q.id === id ? updated : q);
+      try { localStorage.setItem('ecotex_quotes', JSON.stringify(qts)); } catch {}
+      return { quotes: qts };
+    });
     refreshData();
   };
 
   const removeQuote = async (id: string) => {
     await apiService.deleteQuote(id);
     setQuotes(prev => prev.filter(q => q.id !== id));
+    useStore.setState((state) => {
+      const qts = state.quotes.filter(q => q.id !== id);
+      try { localStorage.setItem('ecotex_quotes', JSON.stringify(qts)); } catch {}
+      return { quotes: qts };
+    });
     refreshData();
   };
 
@@ -237,7 +311,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updated = existingIdx >= 0 
         ? state.orders.map(o => o.id === created.id ? created : o)
         : [created, ...state.orders];
-      return { orders: updated };
+      try { localStorage.setItem('ecotex_orders', JSON.stringify(updated)); } catch {}
+      return { 
+        orders: updated,
+        analytics: {
+          ...state.analytics,
+          totalOrdersCount: updated.length,
+          grossRevenue: state.analytics.grossRevenue + (Number(created.total || created.totalAmount) || 0)
+        }
+      };
     });
     refreshData();
     return created;
@@ -251,7 +333,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updated = existingIdx >= 0
         ? state.quotes.map(q => q.id === created.id ? created : q)
         : [created, ...state.quotes];
-      return { quotes: updated };
+      try { localStorage.setItem('ecotex_quotes', JSON.stringify(updated)); } catch {}
+      return { 
+        quotes: updated,
+        analytics: {
+          ...state.analytics,
+          quoteRequestsCount: updated.length
+        }
+      };
     });
     refreshData();
     return created;
