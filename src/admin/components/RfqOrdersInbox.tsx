@@ -61,6 +61,26 @@ export const RfqOrdersInbox: React.FC = () => {
   const [selectedQuote, setSelectedQuote] = useState<QuoteSubmission | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
+  // Lock body scroll and handle Escape key for modals
+  useEffect(() => {
+    if (!selectedQuote && !selectedOrder) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedQuote(null);
+        setSelectedOrder(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedQuote, selectedOrder]);
+
   // Filter Quotes
   const filteredQuotes = quotes.filter(q => {
     const matchesSearch = 
