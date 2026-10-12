@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Image as ImageIcon, 
   Upload, 
@@ -209,11 +210,11 @@ export const MediaLibraryManager: React.FC = () => {
         ))}
       </div>
 
-      {/* Asset Preview Modal - Centered with Blurry Backdrop */}
-      {previewAsset && (
+      {/* Asset Preview Modal - Centered with Blurry Backdrop in Document Portal */}
+      {previewAsset && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setPreviewAsset(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -285,7 +286,8 @@ export const MediaLibraryManager: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

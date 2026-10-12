@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   FolderTree, 
   Plus, 
@@ -378,12 +379,12 @@ export const CategoriesManager: React.FC = () => {
       </div>
 
       {/* ========================================================
-          MODAL: ADD / EDIT CATEGORY - Centered with Blurry Backdrop
+          MODAL: ADD / EDIT CATEGORY - Centered with Blurry Backdrop in Portal
          ======================================================== */}
-      {isModalOpen && (
+      {isModalOpen && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setIsModalOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -540,16 +541,17 @@ export const CategoriesManager: React.FC = () => {
 
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ========================================================
-          MODAL: VIEW ASSIGNED PRODUCTS - Centered with Blurry Backdrop
+          MODAL: VIEW ASSIGNED PRODUCTS - Centered with Blurry Backdrop in Portal
          ======================================================== */}
-      {selectedCatForProducts && (
+      {selectedCatForProducts && typeof document !== 'undefined' && createPortal(
         <div 
           onClick={() => setSelectedCatForProducts(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn transition-all"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn transition-all"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
@@ -622,7 +624,8 @@ export const CategoriesManager: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
