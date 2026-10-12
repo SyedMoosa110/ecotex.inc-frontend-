@@ -14,7 +14,8 @@ import {
   ArrowRight, 
   Minus, 
   Plus,
-  Share2
+  Share2,
+  AlertCircle
 } from 'lucide-react';
 
 interface ProductDetailPageProps {
@@ -42,12 +43,22 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [activeTab, setActiveTab] = useState<'description' | 'details' | 'reviews'>('description');
   const [addedToast, setAddedToast] = useState(false);
 
+  // Wholesale minimum order quantity:
+  // Fallback to 500 pcs if product.moq is 1 (retail) or undefined
+  const wholesaleMoq = (product.wholesaleMoq && product.wholesaleMoq >= 50)
+    ? product.wholesaleMoq
+    : (product.moq && product.moq >= 50 ? product.moq : 500);
+
+  const minQuantity = orderType === 'wholesale' ? wholesaleMoq : 1;
+  const [moqWarning, setMoqWarning] = useState<string | null>(null);
+
   // Scroll to top on mount or when product changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setActiveImageIndex(0);
-    setQuantity(orderType === 'retail' ? 1 : (product.moq || 500));
-  }, [product, orderType]);
+    setMoqWarning(null);
+    setQuantity(orderType === 'retail' ? 1 : wholesaleMoq);
+  }, [product, orderType, wholesaleMoq]);
 
   // Product transparent cutout bag
   const bagCutout = product.image || (
@@ -89,20 +100,37 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const originalPrice = (currentPrice * 1.25);
 
   const handleIncrement = () => {
-    setQuantity(prev => prev + 1);
+    const step = orderType === 'wholesale' ? 250 : 1;
+    setQuantity(prev => prev + step);
+    setMoqWarning(null);
   };
 
   const handleDecrement = () => {
-    setQuantity(prev => Math.max(1, prev - 1));
+    const step = orderType === 'wholesale' ? 250 : 1;
+    setQuantity(prev => Math.max(minQuantity, prev - step));
   };
 
   const handleAddToCartClick = () => {
+    if (orderType === 'wholesale' && quantity < wholesaleMoq) {
+      setMoqWarning(`Wholesale minimum order quantity is ${wholesaleMoq.toLocaleString()} pcs. Order cannot be placed below this quantity.`);
+      setQuantity(wholesaleMoq);
+      setTimeout(() => setMoqWarning(null), 4000);
+      return;
+    }
+    setMoqWarning(null);
     onAddToCart(product, product.availableColors[0]?.hex || '#166534', quantity);
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2500);
   };
 
   const handleExpressCheckout = () => {
+    if (orderType === 'wholesale' && quantity < wholesaleMoq) {
+      setMoqWarning(`Wholesale minimum order quantity is ${wholesaleMoq.toLocaleString()} pcs. Order cannot be placed below this quantity.`);
+      setQuantity(wholesaleMoq);
+      setTimeout(() => setMoqWarning(null), 4000);
+      return;
+    }
+    setMoqWarning(null);
     const selectedColor = product.availableColors[0]?.hex || '#166534';
     if (onExpressCheckout) {
       onExpressCheckout(product, selectedColor, quantity);
@@ -305,7 +333,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </span>
               {orderType === 'wholesale' && (
                 <span className="ml-auto text-xs font-bold text-[#166534] bg-[#dcfce7] px-3 py-1 rounded-full font-mono">
-                  MOQ: {product.moq || 500} pcs
+                  MOQ: {wholesaleMoq.toLocaleString()} pcs
                 </span>
               )}
             </div>
@@ -317,7 +345,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   <span>Order Quantity</span>
                   {orderType === 'wholesale' && (
                     <span className="text-[10px] font-bold text-[#166534] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                      MOQ: {product.moq || 500} pcs
+                      MOQ: {wholesaleMoq.toLocaleString()} PCS
                     </span>
                   )}
                 </label>
@@ -332,23 +360,39 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <div className="w-full sm:w-44 h-12 rounded-xl border border-slate-300 bg-white flex items-center justify-between px-2 shadow-xs">
                   <button
                     type="button"
+                    disabled={quantity <= minQuantity}
                     onClick={() => {
                       const step = orderType === 'wholesale' ? 250 : 1;
-                      const min = orderType === 'wholesale' ? (product.moq || 500) : 1;
-                      setQuantity(prev => Math.max(min, prev - step));
+                      setQuantity(prev => Math.max(minQuantity, prev - step));
+                      setMoqWarning(null);
                     }}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-black hover:bg-slate-100 transition-colors cursor-pointer"
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      quantity <= minQuantity
+                        ? 'text-slate-300 bg-slate-50 cursor-not-allowed'
+                        : 'text-slate-600 hover:text-black hover:bg-slate-100 cursor-pointer'
+                    }`}
                     aria-label="Decrease quantity"
+                    title={quantity <= minQuantity ? `Minimum order is ${minQuantity.toLocaleString()} pcs` : 'Decrease'}
                   >
                     <Minus className="w-4 h-4" />
                   </button>
                   <input
                     type="number"
-                    min={orderType === 'wholesale' ? (product.moq || 500) : 1}
+                    min={minQuantity}
                     value={quantity}
                     onChange={(e) => {
-                      const val = parseInt(e.target.value) || 1;
-                      setQuantity(Math.max(1, val));
+                      const val = parseInt(e.target.value);
+                      if (isNaN(val)) {
+                        setQuantity(minQuantity);
+                      } else {
+                        setQuantity(Math.max(minQuantity, val));
+                      }
+                      setMoqWarning(null);
+                    }}
+                    onBlur={() => {
+                      if (quantity < minQuantity) {
+                        setQuantity(minQuantity);
+                      }
                     }}
                     className="w-20 text-center font-mono font-bold text-sm text-[#111827] focus:outline-none bg-transparent"
                     aria-label="Quantity amount"
@@ -358,6 +402,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     onClick={() => {
                       const step = orderType === 'wholesale' ? 250 : 1;
                       setQuantity(prev => prev + step);
+                      setMoqWarning(null);
                     }}
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-black hover:bg-slate-100 transition-colors cursor-pointer"
                     aria-label="Increase quantity"
@@ -379,22 +424,42 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
               {/* Wholesale Quick Select Presets */}
               {orderType === 'wholesale' && (
-                <div className="flex items-center gap-2 mt-2.5">
+                <div className="flex flex-wrap items-center gap-2 mt-2.5">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick:</span>
-                  {[500, 1000, 2500, 5000, 10000].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setQuantity(preset)}
-                      className={`px-2.5 py-1 text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
-                        quantity === preset
-                          ? 'bg-[#166534] text-white border-[#166534] font-bold shadow-xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900'
-                      }`}
-                    >
-                      {preset.toLocaleString()}
-                    </button>
-                  ))}
+                  {Array.from(new Set([wholesaleMoq, 1000, 2500, 5000, 10000].filter(v => v >= wholesaleMoq)))
+                    .map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => {
+                          setQuantity(preset);
+                          setMoqWarning(null);
+                        }}
+                        className={`px-2.5 py-1 text-[11px] font-mono rounded-lg border transition-all cursor-pointer ${
+                          quantity === preset
+                            ? 'bg-[#166534] text-white border-[#166534] font-bold shadow-xs'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900'
+                        }`}
+                      >
+                        {preset.toLocaleString()}
+                      </button>
+                    ))}
+                </div>
+              )}
+
+              {/* Validation Warning Alert */}
+              {moqWarning && (
+                <div className="mt-2.5 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded-xl flex items-center gap-2 animate-fadeIn">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{moqWarning}</span>
+                </div>
+              )}
+
+              {/* Wholesale Policy Banner */}
+              {orderType === 'wholesale' && !moqWarning && (
+                <div className="mt-2 text-[11px] text-emerald-800 bg-emerald-50/70 border border-emerald-200/60 rounded-xl px-3 py-1.5 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Wholesale minimum: <strong>{wholesaleMoq.toLocaleString()} pcs</strong>. Is se kam quantity mein wholesale order place nahi ho sakta.</span>
                 </div>
               )}
             </div>

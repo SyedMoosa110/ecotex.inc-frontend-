@@ -15,6 +15,7 @@ export interface Product {
   subtitle: string;
   pricePerUnit: number; // base bulk price for 1,000+ units
   moq: number; // minimum order quantity
+  wholesaleMoq?: number; // wholesale minimum order quantity
   gsm: number; // Grams per square meter
   dimensions: string; // e.g., '12"W x 14"H x 4"D'
   material: string; // e.g., 'Virgin & Recycled Non-Woven Polypropylene'

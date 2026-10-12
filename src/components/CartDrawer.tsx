@@ -442,35 +442,52 @@ Notification automatically generated via EcoTex Storefront.`;
                               </div>
 
                               {/* 3. Quantity: Responsive Stepper with high-contrast text */}
-                              <div className="col-span-2 flex items-center justify-center gap-1.5 sm:gap-2.5 text-xs sm:text-sm font-serif select-none">
-                                <motion.button
-                                  whileTap={{ scale: 0.8 }}
-                                  type="button"
-                                  onClick={() => {
-                                    const step = item.quantity > 500 ? 500 : 1;
-                                    onUpdateQuantity(item.id, Math.max(1, item.quantity - step));
-                                  }}
-                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#1c1b18] flex items-center justify-center transition-colors cursor-pointer text-sm leading-none font-bold"
-                                  aria-label="Decrease quantity"
-                                >
-                                  –
-                                </motion.button>
-                                <span className="font-mono text-xs sm:text-sm font-bold text-[#1c1b18] tabular-nums min-w-[28px] text-center px-1">
-                                  {item.quantity < 1000 ? item.quantity : `${item.quantity.toLocaleString()}`}
-                                </span>
-                                <motion.button
-                                  whileTap={{ scale: 0.8 }}
-                                  type="button"
-                                  onClick={() => {
-                                    const step = item.quantity >= 500 ? 500 : 1;
-                                    onUpdateQuantity(item.id, item.quantity + step);
-                                  }}
-                                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#1c1b18] flex items-center justify-center transition-colors cursor-pointer text-sm leading-none font-bold"
-                                  aria-label="Increase quantity"
-                                >
-                                  +
-                                </motion.button>
-                              </div>
+                              {(() => {
+                                const itemMoq = (item.product.wholesaleMoq && item.product.wholesaleMoq >= 50)
+                                  ? item.product.wholesaleMoq
+                                  : (item.product.moq && item.product.moq >= 50 ? item.product.moq : 500);
+                                const isWholesaleItem = item.quantity >= 250;
+                                const minQty = isWholesaleItem ? itemMoq : 1;
+                                const isAtMin = item.quantity <= minQty;
+
+                                return (
+                                  <div className="col-span-2 flex items-center justify-center gap-1.5 sm:gap-2.5 text-xs sm:text-sm font-serif select-none">
+                                    <motion.button
+                                      whileTap={{ scale: isAtMin ? 1 : 0.8 }}
+                                      type="button"
+                                      disabled={isAtMin}
+                                      onClick={() => {
+                                        const step = isWholesaleItem ? 250 : 1;
+                                        onUpdateQuantity(item.id, Math.max(minQty, item.quantity - step));
+                                      }}
+                                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border flex items-center justify-center transition-colors text-sm leading-none font-bold ${
+                                        isAtMin
+                                          ? 'border-slate-200 text-slate-300 bg-slate-50 cursor-not-allowed'
+                                          : 'border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#1c1b18] cursor-pointer'
+                                      }`}
+                                      aria-label="Decrease quantity"
+                                      title={isAtMin ? `Wholesale minimum is ${minQty.toLocaleString()} units` : 'Decrease'}
+                                    >
+                                      –
+                                    </motion.button>
+                                    <span className="font-mono text-xs sm:text-sm font-bold text-[#1c1b18] tabular-nums min-w-[28px] text-center px-1">
+                                      {item.quantity < 1000 ? item.quantity : `${item.quantity.toLocaleString()}`}
+                                    </span>
+                                    <motion.button
+                                      whileTap={{ scale: 0.8 }}
+                                      type="button"
+                                      onClick={() => {
+                                        const step = isWholesaleItem ? 250 : 1;
+                                        onUpdateQuantity(item.id, item.quantity + step);
+                                      }}
+                                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-[#cfc8bd] hover:border-[#1c1b18] hover:bg-white text-[#1c1b18] flex items-center justify-center transition-colors cursor-pointer text-sm leading-none font-bold"
+                                      aria-label="Increase quantity"
+                                    >
+                                      +
+                                    </motion.button>
+                                  </div>
+                                );
+                              })()}
 
                               {/* 4. Price */}
                               <div className="col-span-2 text-right pr-2 font-serif text-sm sm:text-base text-[#1c1b18]">
