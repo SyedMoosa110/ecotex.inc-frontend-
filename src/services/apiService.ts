@@ -1,4 +1,4 @@
-import { Product, Order, QuoteSubmission, SiteSettings, CategoryItem } from '../types';
+import { Product, Order, QuoteSubmission, SiteSettings, CategoryItem, CustomerThread } from '../types';
 
 export const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
 
@@ -232,6 +232,45 @@ export const apiService = {
       method: 'POST',
     });
     if (!res.ok) throw new Error('Failed to reset database');
+    return res.json();
+  },
+
+  // 8. Messages
+  async getMessages(): Promise<CustomerThread[]> {
+    const res = await fetch(`${BASE_URL}/messages`);
+    if (!res.ok) throw new Error('Failed to fetch messages');
+    return res.json();
+  },
+
+  async saveMessageThread(thread: CustomerThread): Promise<{ success: boolean; thread: CustomerThread }> {
+    const res = await fetch(`${BASE_URL}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(thread),
+    });
+    if (!res.ok) throw new Error('Failed to save message thread');
+    return res.json();
+  },
+
+  async replyMessageThread(id: string, text: string): Promise<CustomerThread> {
+    const res = await fetch(`${BASE_URL}/messages/${id}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) throw new Error('Failed to reply to message thread');
+    return res.json();
+  },
+
+  // 9. File Upload
+  async uploadFile(payload: { data: string; filename: string } | FormData): Promise<{ success: boolean; url: string; filename: string }> {
+    const isFormData = typeof FormData !== 'undefined' && payload instanceof FormData;
+    const res = await fetch(`${BASE_URL}/upload`, {
+      method: 'POST',
+      headers: isFormData ? {} : { 'Content-Type': 'application/json' },
+      body: isFormData ? payload : JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Failed to upload file');
     return res.json();
   }
 };

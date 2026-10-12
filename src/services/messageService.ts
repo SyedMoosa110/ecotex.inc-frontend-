@@ -1,6 +1,7 @@
 import { CustomerThread, ChatMessage } from '../types';
+import { BASE_URL } from './apiService';
 
-const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+const API_BASE = BASE_URL;
 const STORAGE_KEY = 'ecotex_customer_messages_v1';
 const CHATBOT_THREAD_KEY = 'ecotex_active_chatbot_thread_id';
 const EVENT_NAME = 'ecotex_messages_updated';
@@ -81,6 +82,27 @@ export function getStoredThreads(): CustomerThread[] {
     console.warn('Failed to parse stored threads:', err);
   }
   return INITIAL_THREADS;
+}
+
+export async function fetchRemoteThreads(): Promise<CustomerThread[]> {
+  try {
+    const res = await fetch(`${API_BASE}/messages`);
+    if (res.ok) {
+      const serverThreads: CustomerThread[] = await res.json();
+      if (Array.isArray(serverThreads) && serverThreads.length > 0) {
+        const local = getStoredThreads();
+        const map = new Map<string, CustomerThread>();
+        local.forEach(t => map.set(t.id, t));
+        serverThreads.forEach(t => map.set(t.id, t));
+        const merged = Array.from(map.values());
+        saveStoredThreads(merged);
+        return merged;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to sync remote threads:', err);
+  }
+  return getStoredThreads();
 }
 
 export function saveStoredThreads(threads: CustomerThread[]): void {
