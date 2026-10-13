@@ -146,8 +146,7 @@ export default function App() {
     return (
       <AdminDashboard
         onBackToSite={() => {
-          window.history.pushState({}, '', '/');
-          handleNavigate('home');
+          window.open('/', '_blank', 'noopener,noreferrer');
         }}
         onLogout={() => {
           logout();

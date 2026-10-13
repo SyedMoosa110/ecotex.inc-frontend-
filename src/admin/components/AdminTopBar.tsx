@@ -150,13 +150,15 @@ export const AdminTopBar: React.FC<AdminTopBarProps> = ({
       <div className="flex items-center gap-2 sm:gap-4">
         
         {/* View Live Site Button */}
-        <button
-          onClick={onViewLiveSite}
-          className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-[#4E9F76] bg-[#B2E2C5]/15 border border-[#B2E2C5]/40 hover:bg-[#B2E2C5]/30 hover:border-[#86C59E] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xs"
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-[#4E9F76] bg-[#B2E2C5]/15 border border-[#B2E2C5]/40 hover:bg-[#B2E2C5]/30 hover:border-[#86C59E] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xs cursor-pointer"
         >
           <ExternalLink className="w-3.5 h-3.5 text-[#86C59E]" />
           <span>View Live Site</span>
-        </button>
+        </a>
 
         {/* Notifications Popover */}
         <div className="relative" ref={notifRef}>
@@ -347,13 +349,15 @@ export const AdminTopBar: React.FC<AdminTopBarProps> = ({
                 <div className="text-[11px] text-slate-400 truncate">{adminUser?.email || 'admin@ecotexinc.com'}</div>
               </div>
               <div className="py-1">
-                <button
-                  onClick={onViewLiveSite}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:text-[#4E9F76] hover:bg-[#B2E2C5]/10 rounded-xl font-medium transition-colors"
+                <a
+                  href="/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-700 hover:text-[#4E9F76] hover:bg-[#B2E2C5]/10 rounded-xl font-medium transition-colors cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5 text-[#86C59E]" />
                   <span>Open Storefront</span>
-                </button>
+                </a>
               </div>
               <div className="pt-1 border-t border-slate-100">
                 <button
