@@ -25,10 +25,10 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
   onNavigateHome 
 }) => {
   const { login } = useStore();
-  const [email, setEmail] = useState('admin@ecotexinc.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,16 +120,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
               </div>
             )}
 
-            {/* Quick Demo Credentials Pill */}
-            <div className="mb-6 p-3.5 rounded-2xl bg-[#f4faf4] border border-[#B2E2C5]/40 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#86C59E]" />
-                <span className="font-semibold text-[#4E9F76]">Master Login:</span>
-                <span className="font-mono text-slate-600">admin@ecotexinc.com</span>
-              </div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 font-mono">admin123</span>
-            </div>
-
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               
@@ -143,11 +133,12 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
                     <Mail className="w-4 h-4 text-[#4E9F76]" />
                   </div>
                   <input
-                    type="email"
+                    type="text"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@ecotexinc.com"
+                    placeholder="Enter admin email or username"
+                    autoComplete="username"
                     className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-slate-200 bg-[#fbfdfb] text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#86C59E] focus:ring-2 focus:ring-[#B2E2C5]/30 transition-all font-medium"
                   />
                 </div>
@@ -167,7 +158,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
+                    placeholder="Enter security password"
+                    autoComplete="current-password"
                     className="w-full pl-10 pr-11 py-3.5 rounded-xl border border-slate-200 bg-[#fbfdfb] text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#86C59E] focus:ring-2 focus:ring-[#B2E2C5]/30 transition-all font-medium"
                   />
                   <button
